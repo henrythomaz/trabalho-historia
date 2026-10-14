@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="Pão, Terra e Poder — um jogo 3D educacional sobre a Revolução Francesa e a Revolução Russa." />
+  <meta name="theme-color" content="#101726" />
+  <title>Pão, Terra e Poder — Jogo histórico interativo</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+</head>
+<body>
+  <div id="app">
+    <!-- Cena 3D -->
+    <div id="scene-container" aria-hidden="true"></div>
+
+    <!-- Camada de interface -->
+    <div id="ui-root">
+
+      <!-- Tela inicial -->
+      <section id="screen-title" class="screen screen--visible" aria-label="Tela inicial">
+        <div class="title-card">
+          <p class="title-kicker">Um jogo histórico interativo</p>
+          <h1 class="game-title">PÃO, TERRA<br />E PODER</h1>
+          <p class="game-subtitle">Duas revoluções. Uma sociedade em crise. Suas decisões importam.</p>
+          <ul class="title-facts" aria-label="Informações da partida">
+            <li><strong>2</strong><span>revoluções</span></li>
+            <li><strong>4</strong><span>decisões</span></li>
+            <li><strong>±3</strong><span>minutos</span></li>
+          </ul>
+          <button id="btn-start" class="btn btn--primary" type="button">COMEÇAR A JOGAR</button>
+          <p class="title-hint">Toque nos locais destacados, leia a situação e escolha como agir.</p>
+        </div>
+      </section>
+
+      <!-- HUD da partida -->
+      <header id="hud" class="hud" hidden>
+        <div class="hud-top">
+          <div class="hud-phase">
+            <span id="hud-phase-name" class="hud-phase-name">FRANÇA — 1789</span>
+            <span id="hud-progress" class="hud-progress">DECISÃO 1 DE 4</span>
+          </div>
+          <div id="indicators" class="indicators" aria-label="Indicadores da simulação"></div>
+        </div>
+        <p class="hud-disclaimer">Indicadores de simulação didática. Não representam estatísticas históricas reais.</p>
+      </header>
+
+      <!-- Placa de introdução da fase -->
+      <section id="phase-intro" class="phase-intro" hidden aria-live="polite">
+        <div class="phase-card">
+          <h2 id="phase-intro-title" class="phase-title">FRANÇA — 1789</h2>
+          <p id="phase-intro-text" class="phase-text"></p>
+          <button id="btn-phase-start" class="btn btn--primary" type="button">EXPLORAR A CIDADE</button>
+        </div>
+      </section>
+
+      <!-- Dica de hotspot (também funciona como alternativa acessível ao toque 3D) -->
+      <button id="hotspot-hint" class="hotspot-hint" hidden type="button"></button>
+
+      <!-- Painel de evento / decisão -->
+      <section id="event-panel" class="panel" hidden aria-modal="true" role="dialog" aria-labelledby="event-title">
+        <div class="panel-scroll">
+          <p id="event-kicker" class="panel-kicker"></p>
+          <h2 id="event-title" class="panel-title"></h2>
+          <p id="event-context" class="panel-text"></p>
+          <p id="event-question" class="panel-question"></p>
+          <div id="event-options" class="options"></div>
+        </div>
+      </section>
+
+      <!-- Painel de resultado -->
+      <section id="result-panel" class="panel" hidden aria-modal="true" role="dialog" aria-labelledby="result-title">
+        <div class="panel-scroll">
+          <p class="panel-kicker">Resultado da decisão</p>
+          <h2 id="result-title" class="panel-title"></h2>
+
+          <div class="result-block result-block--sim">
+            <h3 class="result-heading">NA SUA SIMULAÇÃO</h3>
+            <div id="result-effects" class="effects"></div>
+            <p id="result-summary" class="panel-text"></p>
+          </div>
+
+          <div class="result-block result-block--history">
+            <h3 class="result-heading">O QUE ACONTECEU NA HISTÓRIA</h3>
+            <p id="result-history" class="panel-text"></p>
+          </div>
+
+          <button id="btn-continue" class="btn btn--primary" type="button">CONTINUAR</button>
+        </div>
+      </section>
+
+      <!-- Transição entre fases -->
+      <section id="transition" class="transition" hidden aria-live="polite">
+        <div class="transition-inner">
+          <p class="transition-kicker">MAIS DE UM SÉCULO DEPOIS</p>
+          <p class="transition-text">Uma nova crise. Outros grupos sociais. Outra disputa pelo poder.</p>
+        </div>
+      </section>
+
+      <!-- Tela final -->
+      <section id="screen-final" class="screen" hidden aria-label="Relatório final">
+        <div class="final-scroll" id="final-content"><!-- preenchido por ui.js --></div>
+      </section>
+
+      <!-- Fallback sem WebGL -->
+      <section id="screen-fallback" class="screen" hidden aria-label="Versão simplificada">
+        <div class="final-scroll">
+          <div class="fallback-card">
+            <h1 class="panel-title">PÃO, TERRA E PODER</h1>
+            <p class="panel-text">Este dispositivo não conseguiu iniciar a cena 3D. Você ainda pode conhecer os eventos históricos em uma versão simplificada.</p>
+            <div id="fallback-content"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Aviso de erro amigável -->
+      <div id="toast" class="toast" hidden role="status"></div>
+    </div>
+  </div>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
