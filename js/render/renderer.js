@@ -16,7 +16,7 @@ const NPC_BASE_POSITIONS = [
   { x: 408, y: 470 },
   { x: 626, y: 790 },
   { x: 405, y: 1138 },
-  { x: 635, y: 1600 }
+  { x: 615, y: 1450 }
 ];
 
 export function npcPositionsForCount(count, worldHeight = 3220) {
@@ -723,7 +723,7 @@ export class Renderer {
     ctx.fill();
 
     if (image) {
-      const maxHeight = isSpeaking ? 94 : 86;
+      const maxHeight = isSpeaking ? 60 : 56;
       const aspect = image.naturalWidth > 0 && image.naturalHeight > 0
         ? image.naturalWidth / image.naturalHeight : 0.62;
       const targetWidth = Math.min(68, maxHeight * aspect);
