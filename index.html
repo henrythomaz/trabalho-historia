@@ -1,121 +1,110 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="description" content="Pão, Terra e Poder — um jogo 3D educacional sobre a Revolução Francesa e a Revolução Russa." />
-  <meta name="theme-color" content="#101726" />
-  <title>Pão, Terra e Poder — Jogo histórico interativo</title>
-  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#171b26">
+  <meta name="description" content="Um pequeno RPG educativo sobre a Revolução Francesa e a Revolução Russa.">
+  <title>Entre Revoluções — Jogo histórico 2D</title>
+  <link rel="icon" href="assets/outros/favicon.png" type="image/png">
+  <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-  <div id="app">
-    <!-- Cena 3D -->
-    <div id="scene-container" aria-hidden="true"></div>
+  <main id="app" class="app-shell">
+    <section class="game-frame" aria-label="Jogo Entre Revoluções">
+      <canvas id="game-canvas" aria-label="Cenário 2D. Use o joystick para caminhar e toque nos marcos históricos para interagir."></canvas>
+      <div id="poi-label-layer" class="poi-label-layer" aria-hidden="true"></div>
 
-    <!-- Camada de interface -->
-    <div id="ui-root">
-
-      <!-- Tela inicial -->
-      <section id="screen-title" class="screen screen--visible" aria-label="Tela inicial">
-        <div class="title-card">
-          <p class="title-kicker">Um jogo histórico interativo</p>
-          <h1 class="game-title">PÃO, TERRA<br />E PODER</h1>
-          <p class="game-subtitle">Duas revoluções. Uma sociedade em crise. Suas decisões importam.</p>
-          <ul class="title-facts" aria-label="Informações da partida">
-            <li><strong>2</strong><span>revoluções</span></li>
-            <li><strong>4</strong><span>decisões</span></li>
-            <li><strong>±3</strong><span>minutos</span></li>
-          </ul>
-          <button id="btn-start" class="btn btn--primary" type="button">COMEÇAR A JOGAR</button>
-          <p class="title-hint">Toque nos locais destacados, leia a situação e escolha como agir.</p>
-        </div>
-      </section>
-
-      <!-- HUD da partida -->
-      <header id="hud" class="hud" hidden>
-        <div class="hud-top">
-          <div class="hud-phase">
-            <span id="hud-phase-name" class="hud-phase-name">FRANÇA — 1789</span>
-            <span id="hud-progress" class="hud-progress">DECISÃO 1 DE 4</span>
+      <header class="hud" id="hud" aria-live="polite">
+        <div class="hud-brand">
+          <img class="brand-logo" src="assets/outros/logo-entre-revolucoes.png" alt="Logo Entre Revoluções">
+          <div>
+            <strong>ENTRE REVOLUÇÕES</strong>
+            <small id="era-label">1789–1799 FRANÇA</small>
           </div>
-          <div id="indicators" class="indicators" aria-label="Indicadores da simulação"></div>
         </div>
-        <p class="hud-disclaimer">Indicadores de simulação didática. Não representam estatísticas históricas reais.</p>
+        <div class="hud-actions">
+          <div class="progress-wrap" aria-label="Progresso da fase">
+            <span id="progress-label">0 / 10</span>
+            <div class="progress-track"><i id="progress-fill"></i></div>
+          </div>
+          <button id="sound-toggle" class="icon-button" type="button" aria-label="Ativar ou silenciar áudio" title="Áudio">♫</button>
+        </div>
       </header>
 
-      <!-- Placa de introdução da fase -->
-      <section id="phase-intro" class="phase-intro" hidden aria-live="polite">
-        <div class="phase-card">
-          <h2 id="phase-intro-title" class="phase-title">FRANÇA — 1789</h2>
-          <p id="phase-intro-text" class="phase-text"></p>
-          <button id="btn-phase-start" class="btn btn--primary" type="button">EXPLORAR A CIDADE</button>
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+      <div id="nearby-prompt" class="nearby-prompt" hidden>
+        <span id="nearby-title">Ponto histórico</span>
+        <button id="interact-button" type="button">INTERAGIR</button>
+      </div>
+
+      <div class="touch-controls" id="touch-controls" aria-label="Controles de movimentação">
+        <div class="joystick" id="joystick" aria-label="Joystick virtual">
+          <div class="joystick-ring"></div>
+          <div class="joystick-knob" id="joystick-knob"></div>
         </div>
-      </section>
+        <span class="joystick-caption">MOVER</span>
+      </div>
 
-      <!-- Dica de hotspot (também funciona como alternativa acessível ao toque 3D) -->
-      <button id="hotspot-hint" class="hotspot-hint" hidden type="button"></button>
-
-      <!-- Painel de evento / decisão -->
-      <section id="event-panel" class="panel" hidden aria-modal="true" role="dialog" aria-labelledby="event-title">
-        <div class="panel-scroll">
-          <p id="event-kicker" class="panel-kicker"></p>
-          <h2 id="event-title" class="panel-title"></h2>
-          <p id="event-context" class="panel-text"></p>
-          <p id="event-question" class="panel-question"></p>
-          <div id="event-options" class="options"></div>
+      <div id="start-screen" class="screen-layer">
+        <div class="paper-card start-card">
+          <img class="project-logo" src="assets/outros/logo-entre-revolucoes.png" alt="Logo Entre Revoluções">
+          <div class="eyebrow">JOGO EDUCATIVO DE HISTÓRIA</div>
+          <h1>ENTRE<br><em>REVOLUÇÕES</em></h1>
+          <p class="lead">Duas épocas. Duas revoluções. Dezessete tópicos para entender como antigos regimes foram contestados.</p>
+          <div class="start-meta"><span>🇫🇷 1789–1799</span><span>🇷🇺 1917</span><span>⏱  3 MIN</span></div>
+          <button id="start-button" class="primary-button" type="button">COMEÇAR JORNADA <span>→</span></button>
         </div>
-      </section>
+        <div class="start-decor">LIBERDADE IGUALDADE MUDANÇA</div>
+      </div>
 
-      <!-- Painel de resultado -->
-      <section id="result-panel" class="panel" hidden aria-modal="true" role="dialog" aria-labelledby="result-title">
-        <div class="panel-scroll">
-          <p class="panel-kicker">Resultado da decisão</p>
-          <h2 id="result-title" class="panel-title"></h2>
-
-          <div class="result-block result-block--sim">
-            <h3 class="result-heading">NA SUA SIMULAÇÃO</h3>
-            <div id="result-effects" class="effects"></div>
-            <p id="result-summary" class="panel-text"></p>
+      <div id="dialogue-layer" class="dialogue-layer" hidden>
+        <div class="dialogue-scrim"></div>
+        <div class="dialogue-panel">
+          <div class="speaker-portrait" id="speaker-portrait">
+            <div class="portrait-fallback" id="portrait-fallback">✦</div>
+            <img id="portrait-image" alt="Retrato do personagem" hidden>
           </div>
-
-          <div class="result-block result-block--history">
-            <h3 class="result-heading">O QUE ACONTECEU NA HISTÓRIA</h3>
-            <p id="result-history" class="panel-text"></p>
-          </div>
-
-          <button id="btn-continue" class="btn btn--primary" type="button">CONTINUAR</button>
-        </div>
-      </section>
-
-      <!-- Transição entre fases -->
-      <section id="transition" class="transition" hidden aria-live="polite">
-        <div class="transition-inner">
-          <p class="transition-kicker">MAIS DE UM SÉCULO DEPOIS</p>
-          <p class="transition-text">Uma nova crise. Outros grupos sociais. Outra disputa pelo poder.</p>
-        </div>
-      </section>
-
-      <!-- Tela final -->
-      <section id="screen-final" class="screen" hidden aria-label="Relatório final">
-        <div class="final-scroll" id="final-content"><!-- preenchido por ui.js --></div>
-      </section>
-
-      <!-- Fallback sem WebGL -->
-      <section id="screen-fallback" class="screen" hidden aria-label="Versão simplificada">
-        <div class="final-scroll">
-          <div class="fallback-card">
-            <h1 class="panel-title">PÃO, TERRA E PODER</h1>
-            <p class="panel-text">Este dispositivo não conseguiu iniciar a cena 3D. Você ainda pode conhecer os eventos históricos em uma versão simplificada.</p>
-            <div id="fallback-content"></div>
+          <div class="dialogue-content">
+            <div class="dialogue-heading"><div><strong id="speaker-name">Personagem</strong><small id="speaker-role">Morador da época</small></div><span id="dialogue-step">1 / 2</span><button id="topic-image-button" class="topic-image-button" type="button" aria-label="Ampliar imagem do tópico" title="Ampliar imagem" hidden><img id="topic-image" class="topic-image" alt="Imagem do tópico"></button></div>
+            <p id="dialogue-text"></p>
+            <button id="next-dialogue" class="dialogue-next" type="button">CONTINUAR <span>▼</span></button>
           </div>
         </div>
-      </section>
+        <button id="dialogue-tap" class="dialogue-tap" type="button" aria-label="Avançar diálogo"></button>
+      </div>
 
-      <!-- Aviso de erro amigável -->
-      <div id="toast" class="toast" hidden role="status"></div>
-    </div>
-  </div>
-  <script type="module" src="./src/main.js"></script>
+      <div id="topic-image-modal" class="topic-image-modal" role="dialog" aria-modal="true" aria-label="Imagem ampliada do tópico" hidden>
+        <button id="topic-image-close" class="topic-image-close" type="button" aria-label="Fechar imagem ampliada">×</button>
+        <div class="topic-image-modal-backdrop"></div>
+        <img id="topic-image-expanded" class="topic-image-expanded" alt="Imagem ampliada do tópico">
+      </div>
+
+      <div id="transition-screen" class="screen-layer transition-layer" hidden>
+        <div class="paper-card transition-card">
+          <div class="eyebrow" id="transition-kicker">PRIMEIRA JORNADA CONCLUÍDA</div>
+          <div class="transition-year" id="transition-year">1917</div>
+          <h2 id="transition-title">Agora, a Rússia.</h2>
+          <p id="transition-copy">Um novo império, outra crise e novas ideias em disputa.</p>
+          <button id="transition-button" class="primary-button" type="button">AVANÇAR NO TEMPO <span>→</span></button>
+        </div>
+      </div>
+
+      <div id="ending-screen" class="screen-layer" hidden>
+        <div class="paper-card ending-card">
+          <div class="eyebrow">FIM DA JORNADA 1789 → 1917</div>
+          <h2>Duas revoluções.<br><em>Mundos transformados.</em></h2>
+          <p>A Revolução Francesa abalou a monarquia e difundiu ideias de cidadania e igualdade jurídica. A Revolução Russa derrubou o czarismo e abriu caminho para um Estado socialista. Ambas nasceram de crises profundas — e seus resultados continuaram a influenciar a história.</p>
+          <div class="ending-stats"><span><b id="ending-found">8</b><small>marcos explorados</small></span><span><b>2</b><small>revoluções</small></span><span><b>1</b><small>jornada</small></span></div>
+          <button id="restart-button" class="primary-button" type="button">JOGAR NOVAMENTE <span>↻</span></button>
+          <p class="microcopy">Personagens fictícios inspirados em grupos sociais da época. As falas resumem fatos históricos.</p>
+        </div>
+      </div>
+
+      <footer class="game-footer" id="game-footer"><span id="footer-location">PARIS 1789</span><span>TOQUE NOS MARCOS ✦</span></footer>
+    </section>
+  </main>
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>

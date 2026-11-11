@@ -1,62 +1,157 @@
-# Pão, Terra e Poder
+# Entre Revoluções — jogo educativo 2D
 
-Jogo 3D educacional sobre a **Revolução Francesa (1789)** e a **Revolução Russa (1917)**, feito para apresentações escolares. O jogador explora duas cidades low-poly construídas em Three.js, toca em locais destacados e toma quatro decisões com consequências simuladas e explicações históricas reais.
+Jogo curto de exploração top-down sobre a Revolução Francesa (1789–1799) e a Revolução Russa (1905–1922). Funciona localmente no navegador, sem backend, sem build e sem dependências externas para a lógica do jogo.
 
-- Sem instalação, sem cadastro, sem login — basta abrir o link.
-- Funciona em celulares (Android/iPhone), tablets e computadores.
-- Sem backend, sem banco de dados, sem recursos externos: tudo é gerado proceduralmente no navegador.
-- Se o dispositivo não suportar WebGL, uma versão simplificada em cartões apresenta os mesmos eventos e decisões.
+## Executar
 
-## Executar localmente
+1. Extraia a pasta `revolucoes-2d-dialogos-player-pixelizacao`.
+2. **Não abra `index.html` com duplo clique (`file://`)**: o jogo usa módulos JavaScript ES, que os navegadores bloqueiam nesse modo por segurança. Na pasta do jogo, execute:
 
-Requisitos: Node.js 20 (LTS).
+   ```bash
+   ./iniciar-local.sh
+   ```
+
+   Depois acesse `http://localhost:8000`. Se preferir, o comando equivalente é `python3 -m http.server 8000`.
+3. No celular, abra o endereço IP do computador na mesma rede Wi-Fi, usando a porta `8000`. O layout prioriza retrato.
+
+O erro `Access to script ... from origin 'null' has been blocked by CORS policy` aparece quando o `index.html` é aberto diretamente pelo sistema de arquivos. Não é necessário remover `type="module"` nem transformar o projeto em um servidor com backend: basta servi-lo por HTTP, como o GitHub Pages faz.
+
+## Controles
+
+- **Celular:** arraste o joystick do canto inferior esquerdo para andar. Toque em um marco no cenário para caminhar automaticamente até ele; quando estiver perto, toque em **INTERAGIR**.
+- **Computador:** use `W`, `A`, `S`, `D` ou as setas. Pressione `E` ou `Enter` perto de um marco. Também é possível clicar em um marco visível.
+- Avance as mensagens tocando no botão **CONTINUAR**.
+- Use o botão `♫` no topo para ligar/desligar a música. A trilha francesa toca na primeira fase e muda automaticamente para outra trilha calma ao começar a fase russa; o áudio começa após clicar em **COMEÇAR JORNADA**.
+
+A fase francesa possui dez acontecimentos e a russa, sete, apresentados em ordem cronológica. Cada tópico traz um resumo de 20 a 30 palavras. Ao concluir todos os marcos de uma fase, aparece a transição para a próxima revolução; o encerramento compara brevemente os processos.
+
+## Inserir as duas versões de cada personagem PNG
+
+Cada personagem possui **seis imagens independentes**: três para aparecer no mapa e três para o retrato dos diálogos. As pastas já estão preparadas para os seis personagens:
+
+```text
+personagens/
+├── personagem1/
+│   ├── cenario/
+│   │   ├── pose1.png
+│   │   ├── pose2.png
+│   │   └── pose3.png
+│   └── dialogo/
+│       ├── pose1.png
+│       ├── pose2.png
+│       └── pose3.png
+├── personagem2/ (mesma estrutura)
+├── personagem3/ (mesma estrutura)
+├── personagem4/ (mesma estrutura)
+├── personagem5/ (mesma estrutura)
+└── personagem6/ (mesma estrutura)
+```
+
+**Poses da pasta `cenario/`:**
+- `pose1.png`: personagem parado no mapa.
+- `pose2.png`: jogador se aproxima do NPC.
+- `pose3.png`: NPC que está participando do diálogo.
+
+**Poses da pasta `dialogo/`:**
+- `pose1.png`: primeira página da conversa.
+- `pose2.png`: segunda página.
+- `pose3.png`: terceira página e todas as páginas seguintes.
+
+Use imagens diferentes nas duas pastas para que o desenho do mapa tenha o acabamento próprio de sprite de jogo, enquanto o retrato do diálogo tenha sua versão mais detalhada/pixelada. Os arquivos devem ser PNG e usar exatamente esses nomes.
+
+**Compatibilidade com os arquivos antigos:** caso uma pose nova ainda não exista, o carregador procura automaticamente `pose1.png`, `pose2.png` ou `pose3.png` na pasta principal do personagem (e também aceita subpastas antigas `pose 1/`, `pose2/` etc.). Assim, você pode atualizar os personagens aos poucos sem deixar o NPC invisível.
+
+O resumo de cada acontecimento agora é dividido em três ou quatro páginas curtas. O contador mostra automaticamente `1 / N`, `2 / N` e assim por diante. Nos retratos, a pose muda junto com a página: primeira página usa pose 1, segunda usa pose 2 e terceira em diante usa pose 3.
+
+## Imagens opcionais do jogador
+
+A pasta `player/` permite substituir o aventureiro que antes era desenhado diretamente pelo Canvas. Para usar uma única imagem, basta colocar `player.png` dentro dela. O jogo carrega esse PNG automaticamente; se não encontrar uma imagem válida, mantém o desenho original sem erro.
+
+Também é possível adicionar imagens direcionais (`front.png`, `back.png`, `left.png` e `right.png`) para o personagem mudar conforme a direção do movimento. Para animar a caminhada, use `walk1.png` e `walk2.png` (ou `pose2.png` e `pose3.png`), e, opcionalmente, versões direcionais como `front-walk1.png` e `front-walk2.png`. A lista completa de nomes aceitos está em `player/README.txt`.
+
+As imagens devem ser PNG, preferencialmente com fundo transparente. A arte mantém sua proporção e o tamanho visual aproximado do jogador atual.
+
+## Imagens opcionais dos tópicos históricos
+
+Cada tópico pode mostrar uma ilustração no canto superior direito do diálogo. Os arquivos são opcionais: se a imagem não existir, o espaço da ilustração fica oculto, sem ícone de arquivo quebrado.
+
+Adicione suas imagens PNG usando exatamente o nome do ID do tópico:
+
+```text
+assets/topicos/
+├── france/
+│   ├── estates.png
+│   ├── estates-general.png
+│   ├── bastille.png
+│   ├── great-fear.png
+│   ├── rights.png
+│   ├── constitutional.png
+│   ├── republic.png
+│   ├── king-execution.png
+│   ├── terror.png
+│   └── directory.png
+└── russia/
+    ├── tsar.png
+    ├── bloody-sunday.png
+    ├── world-war.png
+    ├── february.png
+    ├── provisional.png
+    ├── october.png
+    └── civil-war.png
+```
+
+O vínculo é definido junto aos dados de cada tópico em `js/data/scenes.js`, pela convenção `assets/topicos/{fase}/{id-do-topico}.png`. Para adicionar ou trocar uma ilustração, basta colocar o PNG correspondente na pasta; não é necessário gerar imagens dentro do jogo nem alterar o diálogo.
+
+Os títulos dos marcos são exibidos em uma camada HTML nítida acima do mapa pixel art. O cenário usa um framebuffer reduzido em blocos de aproximadamente 4,5 pixels e é ampliado por vizinho mais próximo, reforçando discretamente o acabamento pixel art. NPCs recebem uma redução de resolução de 3% e o jogador, de 4%, em camadas próprias; os personagens continuam ordenados pela coordenada vertical, sem passar pelo framebuffer do cenário. Os retratos próprios de diálogo mantêm sua renderização pixelada. As imagens dos tópicos podem ser clicadas para abrir uma visualização ampliada com fundo escurecido e botão X para fechar. Os prédios próximos a quatro marcos foram reposicionados com seus respectivos retângulos de colisão para deixar livres as áreas de aproximação e interação; a regra de colisão e a progressão do jogo permanecem preservadas.
+
+## Estrutura
+
+```text
+index.html
+css/styles.css
+js/main.js
+js/data/{characters.js,scenes.js}
+js/systems/{audio.js,collision.js,confetti.js,controls.js,dialogue.js,npc-manager.js}
+js/render/renderer.js
+assets/{cenarios,audio,outros}/
+personagens/personagem1 ... personagem6/
+tests/smoke.test.js
+.github/workflows/deploy-pages.yml
+.nojekyll
+```
+
+O mapa e os personagens provisórios são desenhados em Canvas 2D. `assets/cenarios/` e `assets/audio/` ficam disponíveis para futuros recursos próprios. O áudio atual é sintetizado com Web Audio e não requer arquivos de áudio.
+
+## Testes locais
+
+Com Node.js 18 ou superior:
 
 ```bash
-npm install
-npm run dev      # ambiente de desenvolvimento
-npm run build    # gera a pasta dist/
-npm run preview  # serve o build de produção localmente
+npm test
 ```
 
-## Publicar no GitHub Pages
+Os testes verificam a quantidade de acontecimentos, o tamanho dos textos, a cobertura dos tópicos históricos, a colisão circular-retangular e a rotação equilibrada dos três NPCs de cada fase.
 
-1. Crie um repositório no GitHub e envie este código para a branch `main`:
-   ```bash
-   git init
-   git add .
-   git commit -m "Pão, Terra e Poder — jogo 3D educacional"
-   git branch -M main
-   git remote add origin https://github.com/SEU-USUARIO/NOME-DO-REPOSITORIO.git
-   git push -u origin main
-   ```
-2. No GitHub, abra **Settings → Pages** do repositório.
-3. Em **Build and deployment → Source**, selecione **GitHub Actions** (não selecione "Deploy from a branch").
-4. O workflow `.github/workflows/deploy.yml` publica automaticamente a pasta `dist/` a cada push na `main`.
-5. Ao final do workflow, o jogo ficará disponível em:
-   `https://SEU-USUARIO.github.io/NOME-DO-REPOSITORIO/`
+## Publicar gratuitamente no GitHub Pages
 
-O projeto usa `base: './'` no `vite.config.js`, então todos os caminhos do build são relativos e funcionam em subdiretórios, sem variáveis secretas ou configuração adicional.
+O projeto já está preparado como site estático: não tem backend, etapa de build, variáveis secretas ou chamadas obrigatórias a APIs externas. Os caminhos dos arquivos são relativos, então o jogo também funciona quando o repositório é publicado em um subcaminho do GitHub Pages.
 
-## Estrutura do projeto
+1. Envie o conteúdo desta pasta para a branch `main` de um repositório no GitHub.
+2. No repositório, abra **Settings → Pages** e, em **Build and deployment → Source**, selecione **GitHub Actions**.
+3. O workflow `.github/workflows/deploy-pages.yml` executa `npm test` e publica os arquivos da raiz automaticamente a cada push na branch `main`. Também pode ser iniciado manualmente pela aba **Actions**.
+4. Quando a publicação terminar, o endereço do site aparece no job `deploy` e em **Settings → Pages**.
 
-```
-index.html                  Entrada e estrutura das telas
-vite.config.js              Build estático com base relativa
-public/favicon.svg          Ícone
-src/main.js                 Orquestração da partida e fallback
-src/style.css               Identidade visual e responsividade
-src/game/events.js          Os 4 eventos: textos, alternativas e efeitos
-src/game/state.js           Estado da partida e indicadores (0–100)
-src/game/ui.js              Telas, painéis e tela final
-src/game/scene.js           Renderer, câmera ortográfica e raycaster
-src/game/levels.js          Cenários da França (1789) e da Rússia (1917)
-src/game/buildings.js       Construções e elementos low-poly reutilizáveis
-.github/workflows/deploy.yml Publicação automática no GitHub Pages
-```
+**Importante:** envie os arquivos que estão dentro desta pasta diretamente para a raiz do repositório (incluindo `index.html`, `js/`, `css/`, `assets/`, `personagens/`, `player/` e `.github/`). Não deixe tudo dentro de uma segunda pasta, pois o GitHub Pages precisa encontrar `index.html` na raiz publicada.
 
-## Notas de responsabilidade histórica
+Se a branch principal do repositório tiver outro nome, ajuste `branches: [main]` no workflow. Para testar localmente, execute `python3 -m http.server 8000` na pasta do projeto e abra `http://localhost:8000`.
 
-- Os efeitos numéricos são **simulações didáticas**, não estatísticas históricas — o jogo deixa isso explícito na interface.
-- As explicações distinguem o que ocorreu na História do que é resultado da simulação.
-- A tela final inclui fontes verificáveis: Encyclopaedia Britannica, OpenStax e a Declaração dos Direitos do Homem e do Cidadão (Wikisource).
-- As datas russas de 1917 seguem a convenção didática (Fevereiro e Outubro, calendário juliano então em vigor na Rússia).
+## Conteúdo histórico e referências
+
+O jogo usa personagens fictícios compostos (não são depoimentos históricos reais). Os textos são resumos didáticos:
+
+- Encyclopaedia Britannica, [French Revolution (1787–1799)](https://www.britannica.com/event/French-Revolution).
+- PBS American Experience, [The French Revolution](https://www.pbs.org/wgbh/americanexperience/features/adams-french-revolution/).
+- United States Holocaust Memorial Museum, [The Russian Revolution: 1917](https://encyclopedia.ushmm.org/content/en/article/the-russian-revolution-1917).
+- Encyclopaedia Britannica, [Russian Revolution](https://www.britannica.com/event/Russian-Revolution).
+
+**Nota de calendário:** a Rússia usava o calendário juliano em 1917. Por isso, a Revolução de Fevereiro corresponde a março no calendário gregoriano e a Revolução de Outubro corresponde a novembro. O Estado soviético surgiu após a tomada do poder de 1917; a URSS foi formalmente criada em dezembro de 1922.

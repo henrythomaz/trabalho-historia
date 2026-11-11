@@ -1,0 +1,1 @@
+A trilha sonora atual é criada no navegador com Web Audio: uma sequência instrumental calma para a Revolução Francesa e outra para a Revolução Russa. Nenhum arquivo remoto, API ou chave é necessário. Esta pasta fica reservada para eventuais faixas próprias em versões futuras.
