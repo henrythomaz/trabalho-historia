@@ -9,6 +9,33 @@ const NPC_PIXELATION = 3;
 const PLAYER_PIXELATION = 4;
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
+// Posições dos NPCs no mapa. A quarta posição foi adicionada para a personagem 7.
+// Personagens extras recebem posições alternadas nas laterais da rua, evitando
+// que um novo NPC gere `undefined` e interrompa a renderização do Canvas.
+const NPC_BASE_POSITIONS = [
+  { x: 408, y: 470 },
+  { x: 626, y: 790 },
+  { x: 405, y: 1138 },
+  { x: 635, y: 1600 }
+];
+
+export function npcPositionsForCount(count, worldHeight = 3220) {
+  const safeCount = Math.max(0, Math.floor(Number(count) || 0));
+  const positions = NPC_BASE_POSITIONS.slice(0, safeCount).map(position => ({ ...position }));
+
+  while (positions.length < safeCount) {
+    const extraIndex = positions.length - NPC_BASE_POSITIONS.length;
+    const row = Math.floor(extraIndex / 2);
+    const side = extraIndex % 2;
+    positions.push({
+      x: side === 0 ? 405 : 635,
+      y: Math.min(1850 + row * 150, Math.max(500, worldHeight - 160))
+    });
+  }
+
+  return positions;
+}
+
 export class Renderer {
   constructor(canvas, labelLayer = null) {
     this.canvas = canvas;
@@ -98,7 +125,7 @@ export class Renderer {
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     ctx.translate(-cameraX, -cameraY);
     ctx.imageSmoothingEnabled = true;
-    this._drawActors(ctx, player, phase, npcManager, playerSprites);
+    this._drawActors(ctx, player, phase, npcManager, playerSprites, scene.world.height);
     ctx.restore();
   }
 
@@ -666,12 +693,13 @@ export class Renderer {
     ctx.restore();
   }
 
-  _drawActors(ctx, player, phase, npcManager, playerSprites) {
+  _drawActors(ctx, player, phase, npcManager, playerSprites, worldHeight) {
     const people = npcManager.characters[phase] || [];
-    const positions = [{ x: 408, y: 470 }, { x: 626, y: 790 }, { x: 405, y: 1138 }];
-    const actors = people.map((person, index) => ({
-      type: 'npc', person, position: positions[index], depth: positions[index].y
-    }));
+    const positions = npcPositionsForCount(people.length, worldHeight);
+    const actors = people.map((person, index) => {
+      const position = positions[index];
+      return { type: 'npc', person, position, depth: position.y };
+    });
     actors.push({ type: 'player', position: player, depth: player.y });
     actors.sort((a, b) => a.depth - b.depth);
 

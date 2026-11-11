@@ -27,7 +27,7 @@ A fase francesa possui dez acontecimentos e a russa, sete, apresentados em ordem
 
 ## Inserir as duas versões de cada personagem PNG
 
-Cada personagem possui **seis imagens independentes**: três para aparecer no mapa e três para o retrato dos diálogos. As pastas já estão preparadas para os seis personagens:
+Cada personagem possui **seis imagens independentes**: três para aparecer no mapa e três para o retrato dos diálogos. As pastas já estão preparadas para os sete personagens:
 
 ```text
 personagens/
@@ -44,7 +44,8 @@ personagens/
 ├── personagem3/ (mesma estrutura)
 ├── personagem4/ (mesma estrutura)
 ├── personagem5/ (mesma estrutura)
-└── personagem6/ (mesma estrutura)
+├── personagem6/ (mesma estrutura)
+└── personagem7/ (mesma estrutura)
 ```
 
 **Poses da pasta `cenario/`:**
@@ -58,6 +59,7 @@ personagens/
 - `pose3.png`: terceira página e todas as páginas seguintes.
 
 Use imagens diferentes nas duas pastas para que o desenho do mapa tenha o acabamento próprio de sprite de jogo, enquanto o retrato do diálogo tenha sua versão mais detalhada/pixelada. Os arquivos devem ser PNG e usar exatamente esses nomes.
+Na personagem 7, `cenario/pose3.png` ainda não está no pacote enviado. Até esse arquivo ser adicionado, o jogo usa `cenario/pose2.png` como alternativa para a pose de participação no diálogo; os três retratos da pasta `dialogo/` já estão presentes.
 
 **Compatibilidade com os arquivos antigos:** caso uma pose nova ainda não exista, o carregador procura automaticamente `pose1.png`, `pose2.png` ou `pose3.png` na pasta principal do personagem (e também aceita subpastas antigas `pose 1/`, `pose2/` etc.). Assim, você pode atualizar os personagens aos poucos sem deixar o NPC invisível.
 
@@ -114,8 +116,9 @@ js/data/{characters.js,scenes.js}
 js/systems/{audio.js,collision.js,confetti.js,controls.js,dialogue.js,npc-manager.js}
 js/render/renderer.js
 assets/{cenarios,audio,outros}/
-personagens/personagem1 ... personagem6/
+personagens/personagem1 ... personagem7/
 tests/smoke.test.js
+scripts/build.js
 .github/workflows/deploy-pages.yml
 .nojekyll
 ```
@@ -130,11 +133,11 @@ Com Node.js 18 ou superior:
 npm test
 ```
 
-Os testes verificam a quantidade de acontecimentos, o tamanho dos textos, a cobertura dos tópicos históricos, a colisão circular-retangular e a rotação equilibrada dos três NPCs de cada fase.
+Para gerar a pasta estática de publicação localmente, execute `npm run build`. Os testes verificam a quantidade de acontecimentos, o tamanho dos textos, a cobertura dos tópicos históricos, a colisão circular-retangular e a rotação equilibrada dos três NPCs da França e os quatro NPCs da Rússia, incluindo as posições de mapa.
 
 ## Publicar gratuitamente no GitHub Pages
 
-O projeto já está preparado como site estático: não tem backend, etapa de build, variáveis secretas ou chamadas obrigatórias a APIs externas. Os caminhos dos arquivos são relativos, então o jogo também funciona quando o repositório é publicado em um subcaminho do GitHub Pages.
+O projeto é um site estático: não tem backend, bundler, variáveis secretas ou chamadas obrigatórias a APIs externas. O comando de build apenas copia os arquivos necessários para a pasta `dist`, que é enviada ao GitHub Pages. Os caminhos dos arquivos são relativos, então o jogo também funciona quando o repositório é publicado em um subcaminho do GitHub Pages.
 
 1. Envie o conteúdo desta pasta para a branch `main` de um repositório no GitHub.
 2. No repositório, abra **Settings → Pages** e, em **Build and deployment → Source**, selecione **GitHub Actions**.

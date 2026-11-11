@@ -118,6 +118,14 @@ export class NpcManager {
     if (!poseSet) return null;
     const preferred = poseSet[preferredIndex];
     if (preferred?.complete && preferred.naturalWidth > 0) return preferred;
+
+    // Se a pose 3 do cenário ainda não foi criada, reutiliza a pose 2
+    // (aproximação) em vez de voltar desnecessariamente à pose parada.
+    if (context !== 'dialogo' && context !== 'dialogue' && preferredIndex === 2) {
+      const approachingPose = poseSet[1];
+      if (approachingPose?.complete && approachingPose.naturalWidth > 0) return approachingPose;
+    }
+
     return poseSet.find(image => image.complete && image.naturalWidth > 0) || null;
   }
 

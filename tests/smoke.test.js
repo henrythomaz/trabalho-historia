@@ -18,6 +18,7 @@ globalThis.Image = FakeImage;
 const { NpcManager, poseSources } = await import('../js/systems/npc-manager.js');
 const { DialogueSystem, dialoguePoseIndexForPage } = await import('../js/systems/dialogue.js');
 const { PLAYER_SPRITE_FILES, PlayerSpriteManager, playerSpritePaths } = await import('../js/systems/player-sprites.js');
+const { npcPositionsForCount } = await import('../js/render/renderer.js');
 
 test('as fases apresentam os acontecimentos em várias páginas curtas de diálogo', () => {
   assert.deepEqual(Object.keys(SCENES).sort(), ['france', 'russia']);
@@ -54,17 +55,46 @@ test('movimento permite deslizar junto à parede e respeita limites', () => {
   assert.equal(player.x, 20);
 });
 
-test('NPCs são distribuídos em ordem aleatória sem repetir antes de todos participarem', () => {
+test('NPCs são distribuídos sem repetir até todos participarem em cada fase', () => {
   const manager = new NpcManager();
   for (const phase of ['france', 'russia']) {
     manager.reset(phase);
-    const firstCycle = new Set([manager.pick(phase).id, manager.pick(phase).id, manager.pick(phase).id]);
-    assert.equal(firstCycle.size, 3);
-    assert.equal(manager.characters[phase].length, 3);
+    const expectedCount = manager.characters[phase].length;
+    const firstCycle = new Set(Array.from({ length: expectedCount }, () => manager.pick(phase).id));
+    assert.equal(firstCycle.size, expectedCount);
+    assert.ok(expectedCount >= 3);
     assert.ok(manager.activeCharacterId, 'o personagem escolhido fica marcado como falante');
     manager.clearActive();
     assert.equal(manager.activeCharacterId, null);
   }
+  assert.equal(manager.characters.france.length, 3);
+  assert.equal(manager.characters.russia.length, 4, 'a fase russa inclui a personagem 7');
+});
+
+test('todos os NPCs recebem uma posição válida no mapa, inclusive a quarta personagem', () => {
+  const positions = npcPositionsForCount(4, SCENES.russia.world.height);
+  assert.equal(positions.length, 4);
+  assert.deepEqual(positions[3], { x: 635, y: 1600 });
+  assert.equal(new Set(positions.map(({ x, y }) => `${x},${y}`)).size, 4);
+  for (const position of positions) {
+    assert.ok(Number.isFinite(position.x) && Number.isFinite(position.y));
+    assert.ok(position.x >= 0 && position.x <= SCENES.russia.world.width);
+    assert.ok(position.y >= 0 && position.y < SCENES.russia.world.height);
+  }
+  assert.equal(npcPositionsForCount(5, SCENES.russia.world.height).length, 5);
+});
+
+test('a personagem 7 está cadastrada e possui os três retratos de diálogo', async () => {
+  const { CHARACTERS } = await import('../js/data/characters.js');
+  const { access } = await import('node:fs/promises');
+  const yasmin = CHARACTERS.russia.find(character => character.id === 'personagem7');
+  assert.ok(yasmin, 'personagem7 precisa estar na lista da Rússia');
+  assert.equal(yasmin.folder, 'personagem7');
+  for (let pose = 1; pose <= 3; pose += 1) {
+    await access(new URL(`../personagens/personagem7/dialogo/pose${pose}.png`, import.meta.url));
+  }
+  await access(new URL('../personagens/personagem7/cenario/pose1.png', import.meta.url));
+  await access(new URL('../personagens/personagem7/cenario/pose2.png', import.meta.url));
 });
 
 test('cada personagem carrega três poses separadas para cenário e diálogo', () => {
@@ -100,6 +130,16 @@ test('NPC seleciona pose 1 parado, pose 2 perto e pose 3 durante o diálogo', ()
   assert.equal(manager.getPoseIndex(character, { x: 150, y: 100 }, position), 1);
   manager.activeCharacterId = character.id;
   assert.equal(manager.getPoseIndex(character, { x: 300, y: 300 }, position), 2);
+});
+
+test('personagem sem pose 3 de cenário reaproveita a pose 2 sem quebrar o mapa', () => {
+  const manager = new NpcManager();
+  const yasmin = manager.characters.russia.find(character => character.id === 'personagem7');
+  const [standingPose, approachingPose, missingSpeakingPose] = yasmin.scenePoses;
+  standingPose.complete = true; standingPose.naturalWidth = 1230;
+  approachingPose.complete = true; approachingPose.naturalWidth = 1230;
+  missingSpeakingPose.complete = true; missingSpeakingPose.naturalWidth = 0;
+  assert.equal(manager.getPose(yasmin, 2, 'cenario'), approachingPose);
 });
 
 test('seleção de pose respeita o conjunto do cenário ou do diálogo', () => {
@@ -230,6 +270,8 @@ test('site inclui logo atualizado, confete local e publicação estática no Git
   assert.match(main, /confetti\.celebrate\(\)/);
   assert.match(main, /systems\/confetti\.js/);
   assert.match(workflow, /actions\/deploy-pages@v4/);
+  assert.match(workflow, /npm test/);
+  assert.match(workflow, /npm run build/);
   await access(new URL('../assets/outros/logo-entre-revolucoes.png', import.meta.url));
   await access(new URL('../assets/outros/favicon.png', import.meta.url));
   await access(new URL('../.nojekyll', import.meta.url));
