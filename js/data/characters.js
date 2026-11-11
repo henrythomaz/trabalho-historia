@@ -12,7 +12,8 @@ export const CHARACTERS = {
   ],
   russia: [
     { id: 'personagem4', folder: 'personagem4', name: 'Beatriz', role: 'Trabalhadora têxtil', color: '#a34c3c', accent: '#e1c28e', symbol: '⚙' },
-    { id: 'personagem5', folder: 'personagem5', name: 'Guedes', role: 'Soldado camponês', color: '#526b59', accent: '#d8b77a', symbol: '★' },
-    { id: 'personagem6', folder: 'personagem6', name: 'Yasmin', role: 'Operário metalúrgico', color: '#536e84', accent: '#dfb76e', symbol: '⚒' }
+    { id: 'personagem5', folder: 'personagem5', name: 'Julia', role: 'Trabalhadora ', color: '#300f50', accent: '#e1c28e', symbol: '⚙' },
+    { id: 'personagem6', folder: 'personagem6', name: 'Guedes', role: 'Soldado camponês', color: '#526b59', accent: '#d8b77a', symbol: '★' },
+    { id: 'personagem7', folder: 'personagem7', name: 'Yasmin', role: 'Operário metalúrgico', color: '#536e84', accent: '#dfb76e', symbol: '⚒' }
   ]
 };
