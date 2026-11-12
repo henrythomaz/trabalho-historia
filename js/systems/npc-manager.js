@@ -1,4 +1,5 @@
 import { CHARACTERS } from '../data/characters.js';
+import { characterAssignmentForTopic } from './character-distribution.js';
 
 /**
  * Fontes por contexto:
@@ -39,8 +40,6 @@ export function poseSources(folder, poseNumber, context = 'cenario') {
 export class NpcManager {
   constructor() {
     this.characters = { france: [], russia: [] };
-    this.bags = { france: [], russia: [] };
-    this.lastPicked = { france: null, russia: null };
     this.activeCharacterId = null;
     this._loadAll();
   }
@@ -91,23 +90,11 @@ export class NpcManager {
     }
   }
 
-  _refill(phase) {
-    const bag = [...this.characters[phase]];
-    for (let i = bag.length - 1; i > 0; i -= 1) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [bag[i], bag[j]] = [bag[j], bag[i]];
-    }
-    if (bag.length > 1 && bag[bag.length - 1]?.id === this.lastPicked[phase]) {
-      [bag[0], bag[bag.length - 1]] = [bag[bag.length - 1], bag[0]];
-    }
-    this.bags[phase] = bag;
-  }
-
-  pick(phase) {
-    if (!this.bags[phase].length) this._refill(phase);
-    const character = this.bags[phase].pop();
-    this.lastPicked[phase] = character.id;
-    this.activeCharacterId = character.id;
+  /** Retorna o personagem reservado ao tópico, sem sorteio a cada diálogo. */
+  getCharacterForTopic(phase, poi, topics) {
+    const assignment = characterAssignmentForTopic(topics, this.characters[phase] || [], poi);
+    const character = assignment?.character || null;
+    this.activeCharacterId = character?.id || null;
     return character;
   }
 
@@ -136,9 +123,5 @@ export class NpcManager {
 
   clearActive() { this.activeCharacterId = null; }
 
-  reset(phase) {
-    this.bags[phase] = [];
-    this.lastPicked[phase] = null;
-    this.clearActive();
-  }
+  reset() { this.clearActive(); }
 }

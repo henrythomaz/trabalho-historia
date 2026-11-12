@@ -112,7 +112,7 @@ function openPoi(poi) {
   targetPoi = null;
   ui.nearby.hidden = true;
   audio.blip(510, .08);
-  dialogue.open(phase, poi);
+  dialogue.open(phase, poi, scene.poi);
 }
 
 function startGame() {

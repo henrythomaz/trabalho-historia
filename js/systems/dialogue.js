@@ -22,7 +22,7 @@ export class DialogueSystem {
     });
   }
 
-  open(phase, poi) {
+  open(phase, poi, topics = []) {
     if (this.active) return;
     this.active = true;
     this.currentPoi = poi;
@@ -30,7 +30,12 @@ export class DialogueSystem {
     this.lines = Array.isArray(poi.lines) ? poi.lines.filter(line => typeof line === 'string' && line.trim()) : [String(poi.lines || '')];
     if (!this.lines.length) this.lines = ['Não há texto disponível para este acontecimento.'];
     this.index = 0;
-    this.character = this.npcManager.pick(phase);
+    this.character = this.npcManager.getCharacterForTopic(phase, poi, topics);
+    if (!this.character) {
+      this.active = false;
+      this.currentPoi = null;
+      return;
+    }
     this.el.layer.hidden = false;
     this._render();
   }

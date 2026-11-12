@@ -1,3 +1,5 @@
+import { distributeCharactersAcrossTopics } from '../systems/character-distribution.js';
+
 function seededNoise(x, y) {
   const v = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
   return v - Math.floor(v);
@@ -9,31 +11,59 @@ const NPC_PIXELATION = 3;
 const PLAYER_PIXELATION = 4;
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
-// Posições dos NPCs no mapa. A quarta posição foi adicionada para a personagem 7.
-// Personagens extras recebem posições alternadas nas laterais da rua, evitando
-// que um novo NPC gere `undefined` e interrompa a renderização do Canvas.
-const NPC_BASE_POSITIONS = [
-  { x: 408, y: 470 },
-  { x: 626, y: 790 },
-  { x: 405, y: 1138 },
-  { x: 615, y: 1450 }
-];
+/**
+ * Coloca cada NPC ao lado do primeiro tópico de seu bloco. A mesma função de
+ * distribuição é usada pelo diálogo, evitando que cenário e fala discordem.
+ */
+export function npcPlacementsForScene(scene, characters) {
+  const assignments = distributeCharactersAcrossTopics(scene?.poi || [], characters || []);
+  const placements = [];
+  const occupied = [];
+  const sideOffsets = [-112, 112];
+  const verticalOffsets = [0, -42, 42, -84, 84, -126, 126];
+  const world = scene?.world || { width: 1040, height: 3220 };
+  const obstacles = scene?.obstacles || [];
 
-export function npcPositionsForCount(count, worldHeight = 3220) {
-  const safeCount = Math.max(0, Math.floor(Number(count) || 0));
-  const positions = NPC_BASE_POSITIONS.slice(0, safeCount).map(position => ({ ...position }));
+  const overlapsObstacle = (x, y, radius = 24) => obstacles.some((obstacle) => {
+    const dx = Math.max(obstacle.x - x, 0, x - (obstacle.x + obstacle.w));
+    const dy = Math.max(obstacle.y - y, 0, y - (obstacle.y + obstacle.h));
+    return Math.hypot(dx, dy) < radius;
+  });
 
-  while (positions.length < safeCount) {
-    const extraIndex = positions.length - NPC_BASE_POSITIONS.length;
-    const row = Math.floor(extraIndex / 2);
-    const side = extraIndex % 2;
-    positions.push({
-      x: side === 0 ? 405 : 635,
-      y: Math.min(1850 + row * 150, Math.max(500, worldHeight - 160))
-    });
+  for (const assignment of assignments) {
+    if (!assignment.isAnchorTopic) continue;
+    const { topic, characterIndex, character } = assignment;
+    const preferredSides = characterIndex % 2 === 0 ? [0, 1] : [1, 0];
+    let position = null;
+
+    for (const sideIndex of preferredSides) {
+      const x = topic.x + sideOffsets[sideIndex];
+      for (const offsetY of verticalOffsets) {
+        const y = clamp(topic.y + offsetY, 36, world.height - 36);
+        const isOccupied = occupied.some(point => Math.hypot(point.x - x, point.y - y) < 78);
+        if (x >= 36 && x <= world.width - 36 && !isOccupied && !overlapsObstacle(x, y)) {
+          position = { x, y };
+          break;
+        }
+      }
+      if (position) break;
+    }
+
+    // Em mapas muito compactos pode não existir uma posição livre perfeita;
+    // ainda assim, mantém o NPC próximo ao tópico em vez de removê-lo.
+    if (!position) {
+      const side = preferredSides[0];
+      position = {
+        x: clamp(topic.x + sideOffsets[side], 36, world.width - 36),
+        y: clamp(topic.y, 36, world.height - 36)
+      };
+    }
+
+    occupied.push(position);
+    placements.push({ person: character, character, topic, characterIndex, position });
   }
 
-  return positions;
+  return placements;
 }
 
 export class Renderer {
@@ -125,7 +155,7 @@ export class Renderer {
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     ctx.translate(-cameraX, -cameraY);
     ctx.imageSmoothingEnabled = true;
-    this._drawActors(ctx, player, phase, npcManager, playerSprites, scene.world.height);
+    this._drawActors(ctx, player, phase, npcManager, playerSprites, scene);
     ctx.restore();
   }
 
@@ -693,13 +723,12 @@ export class Renderer {
     ctx.restore();
   }
 
-  _drawActors(ctx, player, phase, npcManager, playerSprites, worldHeight) {
+  _drawActors(ctx, player, phase, npcManager, playerSprites, scene) {
     const people = npcManager.characters[phase] || [];
-    const positions = npcPositionsForCount(people.length, worldHeight);
-    const actors = people.map((person, index) => {
-      const position = positions[index];
-      return { type: 'npc', person, position, depth: position.y };
-    });
+    const placements = npcPlacementsForScene(scene, people);
+    const actors = placements.map(({ person, position }) => ({
+      type: 'npc', person, position, depth: position.y
+    }));
     actors.push({ type: 'player', position: player, depth: player.y });
     actors.sort((a, b) => a.depth - b.depth);
 
@@ -714,12 +743,12 @@ export class Renderer {
     const isSpeaking = poseIndex === 2;
     // Pose 1: parado; pose 2: jogador por perto; pose 3: personagem falando.
     const image = npcManager.getPose(person, poseIndex);
-    const baseY = position.y + 19;
+    const baseY = position.y + 29;
 
     ctx.save();
     ctx.fillStyle = '#19212088';
     ctx.beginPath();
-    ctx.ellipse(position.x, position.y + 17, 19, 5, 0, 0, Math.PI * 2);
+    ctx.ellipse(position.x, position.y + 27, 19, 5, 0, 0, Math.PI * 2);
     ctx.fill();
 
     if (image) {

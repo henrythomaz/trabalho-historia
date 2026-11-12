@@ -3,6 +3,7 @@
  * Cada personagem usa personagens/<pasta>/cenario/pose1..3.png e
  * personagens/<pasta>/dialogo/pose1..3.png. Arquivos antigos na raiz da pasta
  * continuam funcionando como fallback durante a substituição gradual.
+ * A ordem dos itens define a ordem dos blocos de tópicos atribuídos a cada NPC.
  */
 export const CHARACTERS = {
   france: [

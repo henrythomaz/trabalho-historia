@@ -18,7 +18,8 @@ globalThis.Image = FakeImage;
 const { NpcManager, poseSources } = await import('../js/systems/npc-manager.js');
 const { DialogueSystem, dialoguePoseIndexForPage } = await import('../js/systems/dialogue.js');
 const { PLAYER_SPRITE_FILES, PlayerSpriteManager, playerSpritePaths } = await import('../js/systems/player-sprites.js');
-const { npcPositionsForCount } = await import('../js/render/renderer.js');
+const { npcPlacementsForScene } = await import('../js/render/renderer.js');
+const { distributeCharactersAcrossTopics } = await import('../js/systems/character-distribution.js');
 
 test('as fases apresentam os acontecimentos em várias páginas curtas de diálogo', () => {
   assert.deepEqual(Object.keys(SCENES).sort(), ['france', 'russia']);
@@ -55,33 +56,64 @@ test('movimento permite deslizar junto à parede e respeita limites', () => {
   assert.equal(player.x, 20);
 });
 
-test('NPCs são distribuídos sem repetir até todos participarem em cada fase', () => {
-  const manager = new NpcManager();
-  for (const phase of ['france', 'russia']) {
-    manager.reset(phase);
-    const expectedCount = manager.characters[phase].length;
-    const firstCycle = new Set(Array.from({ length: expectedCount }, () => manager.pick(phase).id));
-    assert.equal(firstCycle.size, expectedCount);
-    assert.ok(expectedCount >= 3);
-    assert.ok(manager.activeCharacterId, 'o personagem escolhido fica marcado como falante');
-    manager.clearActive();
-    assert.equal(manager.activeCharacterId, null);
-  }
-  assert.equal(manager.characters.france.length, 3);
-  assert.equal(manager.characters.russia.length, 4, 'a fase russa inclui a personagem 7');
+test('a distribuição usa blocos contínuos e entrega os tópicos extras aos primeiros personagens', () => {
+  const topics = Array.from({ length: 10 }, (_, index) => ({ id: `topico-${index + 1}` }));
+  const characters = Array.from({ length: 4 }, (_, index) => ({ id: `personagem-${index + 1}` }));
+  const assignments = distributeCharactersAcrossTopics(topics, characters);
+  const counts = characters.map(character => assignments.filter(item => item.character === character).length);
+
+  assert.deepEqual(counts, [3, 3, 2, 2]);
+  assert.deepEqual(assignments.map(item => item.character.id), [
+    'personagem-1', 'personagem-1', 'personagem-1',
+    'personagem-2', 'personagem-2', 'personagem-2',
+    'personagem-3', 'personagem-3',
+    'personagem-4', 'personagem-4'
+  ]);
+  assert.deepEqual(assignments.filter(item => item.isAnchorTopic).map(item => item.topic.id), [
+    'topico-1', 'topico-4', 'topico-7', 'topico-9'
+  ]);
 });
 
-test('todos os NPCs recebem uma posição válida no mapa, inclusive a quarta personagem', () => {
-  const positions = npcPositionsForCount(4, SCENES.russia.world.height);
-  assert.equal(positions.length, 4);
-  assert.deepEqual(positions[3], { x: 635, y: 1600 });
-  assert.equal(new Set(positions.map(({ x, y }) => `${x},${y}`)).size, 4);
-  for (const position of positions) {
-    assert.ok(Number.isFinite(position.x) && Number.isFinite(position.y));
-    assert.ok(position.x >= 0 && position.x <= SCENES.russia.world.width);
-    assert.ok(position.y >= 0 && position.y < SCENES.russia.world.height);
+test('cada tópico mantém o NPC de seu bloco nas duas fases atuais', () => {
+  const manager = new NpcManager();
+  for (const phase of ['france', 'russia']) {
+    const scene = SCENES[phase];
+    const assignments = distributeCharactersAcrossTopics(scene.poi, manager.characters[phase]);
+    const counts = manager.characters[phase].map(character =>
+      assignments.filter(item => item.character.id === character.id).length
+    );
+
+    assert.equal(assignments.length, scene.poi.length);
+    assert.ok(Math.max(...counts) - Math.min(...counts) <= 1);
+    for (const assignment of assignments) {
+      assert.equal(
+        manager.getCharacterForTopic(phase, assignment.topic, scene.poi).id,
+        assignment.character.id,
+        `${phase}/${assignment.topic.id} precisa manter seu personagem`
+      );
+    }
   }
-  assert.equal(npcPositionsForCount(5, SCENES.russia.world.height).length, 5);
+});
+
+test('NPCs aparecem apenas ao lado do primeiro tópico de cada bloco', () => {
+  const manager = new NpcManager();
+  for (const phase of ['france', 'russia']) {
+    const scene = SCENES[phase];
+    const placements = npcPlacementsForScene(scene, manager.characters[phase]);
+    const expectedAnchors = distributeCharactersAcrossTopics(scene.poi, manager.characters[phase])
+      .filter(item => item.isAnchorTopic);
+
+    assert.equal(placements.length, expectedAnchors.length);
+    assert.deepEqual(placements.map(item => item.topic.id), expectedAnchors.map(item => item.topic.id));
+    for (const placement of placements) {
+      assert.ok(Math.hypot(placement.position.x - placement.topic.x, placement.position.y - placement.topic.y) <= 160);
+      for (const obstacle of scene.obstacles) {
+        const dx = Math.max(obstacle.x - placement.position.x, 0, placement.position.x - (obstacle.x + obstacle.w));
+        const dy = Math.max(obstacle.y - placement.position.y, 0, placement.position.y - (obstacle.y + obstacle.h));
+        assert.ok(Math.hypot(dx, dy) >= 24, `${phase}/${placement.person.id} não deve ficar dentro de prédio`);
+      }
+    }
+  }
 });
 
 test('a personagem 7 está cadastrada e possui os três retratos de diálogo', async () => {
@@ -183,7 +215,7 @@ test('diálogo avança página por página e atualiza o contador 1/N, 2/N...', (
   };
   const dialogue = new DialogueSystem(elements, manager, () => {});
   const poi = SCENES.france.poi[0];
-  dialogue.open('france', poi);
+  dialogue.open('france', poi, SCENES.france.poi);
   assert.equal(elements.step.textContent, `1 / ${poi.lines.length}`);
   assert.equal(elements.text.textContent, poi.lines[0]);
   dialogue.advance();

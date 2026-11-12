@@ -25,6 +25,15 @@ O erro `Access to script ... from origin 'null' has been blocked by CORS policy`
 
 A fase francesa possui dez acontecimentos e a russa, sete, apresentados em ordem cronológica. Cada tópico traz um resumo de 20 a 30 palavras. Ao concluir todos os marcos de uma fase, aparece a transição para a próxima revolução; o encerramento compara brevemente os processos.
 
+
+## Distribuição dos NPCs pelos tópicos
+
+Os personagens são associados aos tópicos automaticamente, em blocos consecutivos e equilibrados. A ordem dos personagens nos arrays `france` e `russia` de `js/data/characters.js` determina a ordem desses blocos. Quando a divisão não é exata, os primeiros personagens recebem um tópico a mais. Por exemplo, 10 tópicos e 4 personagens resultam em blocos de **3, 3, 2 e 2 tópicos**: o NPC 1 fica associado aos tópicos 1–3, o NPC 2 aos tópicos 4–6, o NPC 3 aos tópicos 7–8 e o NPC 4 aos tópicos 9–10.
+
+No mapa, cada NPC aparece somente ao lado do primeiro tópico de seu bloco. Ao abrir qualquer tópico desse mesmo bloco, o diálogo sempre usa aquele NPC; assim, a pessoa mostrada no cenário não muda inesperadamente entre as páginas ou os tópicos relacionados. Ao adicionar ou remover personagens nos arrays de `characters.js`, a distribuição é recalculada automaticamente.
+
+Na configuração atual, a França tem 10 tópicos e 3 personagens (blocos de **4, 3 e 3**); a Rússia tem 7 tópicos e 4 personagens (blocos de **2, 2, 2 e 1**).
+
 ## Inserir as duas versões de cada personagem PNG
 
 Cada personagem possui **seis imagens independentes**: três para aparecer no mapa e três para o retrato dos diálogos. As pastas já estão preparadas para os sete personagens:
@@ -113,7 +122,7 @@ index.html
 css/styles.css
 js/main.js
 js/data/{characters.js,scenes.js}
-js/systems/{audio.js,collision.js,confetti.js,controls.js,dialogue.js,npc-manager.js}
+js/systems/{audio.js,character-distribution.js,collision.js,confetti.js,controls.js,dialogue.js,npc-manager.js}
 js/render/renderer.js
 assets/{cenarios,audio,outros}/
 personagens/personagem1 ... personagem7/
